@@ -58,6 +58,9 @@ extern   "C" {
 #include "AppConfig.h"
 #include "init_cyw955913Platform.h"
 #include "tx_api.h"
+
+#include "lvgl_support.h"
+
 /*******************************************************************************
  * Macros
  *******************************************************************************/
@@ -73,13 +76,46 @@ extern   "C" {
 #define WDT_TIMER_MSECS             (4 * 1000)
 cy_timer_t wdt_timer;
 
+typedef struct
+{
+    UINT32 *sp;
+    UINT32 pc;
+    UINT32 lr;
+    UINT32 r[7];     /* R0-R6 */
+    UINT32 PSR;
+} sec_exc_t;
+
+static sec_exc_t app_regs;
+
 /*******************************************************************************
  * Function Prototypes
  *******************************************************************************/
 static void start_main_task(ULONG thread_input);
 static void application_thread_cleanup(TX_THREAD *thread_ptr, UINT condition);
 extern void main_task(void);
+extern "C" void wiced_set_coredump_callback(BOOL32 (*callback)(void *info));
 using namespace ::chip;
+
+static BOOL32 app_coredump_callback(void *info)
+{
+    sec_exc_t *p_exec = &app_regs;
+
+    memcpy(p_exec, info, sizeof(sec_exc_t));
+
+    printf("Core dump:sp %p\n", p_exec->sp);
+    printf("Core dump:pc 0x%08lx\n", p_exec->pc);
+    printf("Core dump:lr 0x%08lx\n", p_exec->lr);
+    printf("Core dump:r[0] 0x%08lx\n", p_exec->r[0]);
+    printf("Core dump:r[1] 0x%08lx\n", p_exec->r[1]);
+    printf("Core dump:r[2] 0x%08lx\n", p_exec->r[2]);
+    printf("Core dump:r[3] 0x%08lx\n", p_exec->r[3]);
+    printf("Core dump:r[4] 0x%08lx\n", p_exec->r[4]);
+    printf("Core dump:r[5] 0x%08lx\n", p_exec->r[5]);
+    printf("Core dump:r[6] 0x%08lx\n", p_exec->r[6]);
+    printf("Core dump:PSR 0x%08lx\n", p_exec->PSR);
+
+    return FALSE;
+}
 
 static void wdt_timer_callback(cy_timer_callback_arg_t arg)
 {
@@ -118,13 +154,24 @@ int main(void)
         INF_LOG("ERROR creating WDT timer");
     }
 
+    /* Register coredump callback */
+    wiced_set_coredump_callback(app_coredump_callback);
+
     chip::Platform::MemoryInit();
+
+#if ENABLE_UI
+    display_init();
+    cy_rtos_delay_milliseconds(5 * 1000);	// Pause for logo display and to allow serial terminal to attach
+#endif
 
     /* \x1b[2J\x1b[;H - ANSI ESC sequence for clear screen */
     printf("\x1b[2J\x1b[;H");
- 
+
     INF_LOG("====================================================");
     INF_LOG("chip-CYW955913-lock-app starting Version %d", CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION);
+#if ENABLE_UI
+    INF_LOG("             UI enabled");
+#endif
     INF_LOG("====================================================\r\n");
 
     /*

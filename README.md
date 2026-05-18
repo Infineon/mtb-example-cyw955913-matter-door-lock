@@ -6,18 +6,20 @@ This code example makes use of Matter on an Infineon AIROC&trade; board to demon
 
 ## Requirements
 
-- [ModusToolbox&trade; software](https://www.infineon.com/design-resources/development-tools/sdk/modustoolbox-software) v3.5 or later (tested with v3.6)
-- Board support package (BSP) minimum required version for : v3.0.0.
+- [ModusToolbox&trade;](https://www.infineon.com/design-resources/development-tools/sdk/modustoolbox-software) v3.5 or later (tested with v3.6)
+- Board support package (BSP) minimum required version for : v3.0.0
 - Programming language: C/C++
 - Associated parts: CYW955913EVK-01
 
 <a name="supported toolchains"></a>
+
 
 ## Supported toolchains (make variable 'TOOLCHAIN')
 
 - GNU Arm&reg; embedded compiler v14.2.1 (`GCC_ARM`) - Default value of `TOOLCHAIN`
 
 <a name="supported kits"></a>
+
 
 ## Supported kits (make variable 'TARGET')
 
@@ -26,13 +28,15 @@ This code example makes use of Matter on an Infineon AIROC&trade; board to demon
 
 <a name="software setup"></a>
 
+
 ## Software setup
 
-See the [ModusToolbox&trade; software user guide](https://www.infineon.com/product-information/modustoolbox-info-hub) for information about installing and configuring the tools package.
+See the [ModusToolbox&trade; user guide](https://www.infineon.com/product-information/modustoolbox-info-hub) for information about installing and configuring the tools package.
 
 Install a terminal emulator if you don't have one. Instructions in this document use [Tera Term](https://teratermproject.github.io/index-en.html).
 
 <a name="hardware setup"></a>
+
 
 ## Hardware setup
 
@@ -42,6 +46,52 @@ This example uses the kit’s default configuration. See the respective kit guid
 
 <a name="Using the code example"></a>
 
+## LCD Touch Shield
+
+The 2.8" TFT Touch Shield for Arduino with Capactive Touch may be used with this code example.
+The LCD is available from [Adafruit](https://www.adafruit.com/product/1947) or
+[Amazon](https://www.amazon.com/Adafruit-1947-Shield-Arduino-Capacitive/dp/B00R3R65C0).
+
+### LCD Modifications
+By default, several of the SPI lines are routed to the 2x3 ICSP header on the LCD shield. These need to be
+routed to the Arduino header. The ICSP jumpers need to be cut and the SPI jumpers soldered closed.
+
+<ul>
+<li>ICSP jumpers - These jumpers are located below the 2x3 header on the shield. They are labeled ICSP and outlined in white on the board silk. These jumpers can be cut to disconnect the SPI pins from the 2x3 header.</li>
+<li>SPI jumpers - These jumpers are located directly below the ICSP jumpers. They are labeled 13, SO, SI/11 and are outlined in white on the board silk. You can solder these jumpers closed to connect the SCK, MISO and MOSI pins to GPIO pins:</li>
+<ul>
+<li>MOSI to pin 11</li>
+<li>MISO to pin 12</li>
+<li>SCK to pin 13</li>
+</ul>
+</ul>
+
+The jumpers for the backlight and the touchscreen interrupt should also be soldered closed.
+
+<ul>
+<li>The TFT backlight jumper is located next to the TS int jumper and is labeled backlight/#5 on the board silk</li>
+<li>The touchscreen interrupt pin jumper is located to the left of backlight jumper and is labeled TS int/#7 on the board silk</li>
+</ul>
+
+### CYW955913EVK-01 Settings
+
+Before mounting the LCD Touch Shield on the CYW955913EVK-01, the CYW955913EVK-01 board must be configured correctly.
+
+<ul>
+<li>Set jumper J20 to connect pins 1 and 3 to set the VIOREF voltage selection jumper to 3.3V</li>
+<li>Remove jumper J10 to disconnect the potentiometer and route LHL_GPIO_8 to the Arduino header</li>
+<li>Set SW5 switches to OFF to route BT_GPIO_16 and BT_GPIO_17 from the LEDs to the Arduino header</li>
+</ul>
+
+### Mount the LCD Touch Shield
+
+Once the modifications have been made to the LCD Touch Shield and the proper settings applied to the CYW955913EVK-01, the
+LCD board should be mounted on the Arduino header on the CYW955913EVK-01 board.
+
+### Building the LCD enabled lock application
+
+The LCD support in the lock application is enabled by setting the defines **ENABLE_UI** and **LV_CONF_INCLUDE_SIMPLE** in
+the application Makefile.
 
 ## Using the code example
 
@@ -51,27 +101,27 @@ The ModusToolbox&trade; tools package provides the Project Creator as both a GUI
 
 <details><summary><b>Use Project Creator GUI</b></summary>
 
-1. Open the Project Creator GUI tool.
+1. Open the Project Creator GUI tool
 
    There are several ways to do this, including launching it from the dashboard or from inside the Eclipse IDE. For more details, see the [Project Creator user guide](https://www.infineon.com/row/public/documents/30/44/infineon-modustoolbox-project-creator-user-guide-usermanual-en.pdf) (locally available at *{ModusToolbox&trade; install directory}/tools_{version}/project-creator/docs/project-creator.pdf*).
 
-2. On the **Choose Board Support Package (BSP)** page, select a kit supported by this code example. See [Supported kits](#supported-kits-make-variable-target).
+2. On the **Choose Board Support Package (BSP)** page, select a kit supported by this code example. See [Supported kits](#supported-kits-make-variable-target)
 
    > **Note:** To use this code example for a kit not listed here, you may need to update the source files. If the kit does not have the required resources, the application may not work.
 
 3. On the **Select Application** page:
 
-   a. Select the **Applications(s) Root Path** and the **Target IDE**.
+   a. Select the **Applications(s) Root Path** and the **Target IDE**
 
    > **Note:** Depending on how you open the Project Creator tool, these fields may be pre-selected for you.
 
-   b.	Select this code example from the list by enabling its check box.
+   b.	Select this code example from the list by enabling its check box
 
    > **Note:** You can narrow the list of displayed examples by typing in the filter box.
 
-   c. (Optional) Change the suggested **New Application Name** and **New BSP Name**.
+   c. (Optional) Change the suggested **New Application Name** and **New BSP Name**
 
-   d. Click **Create** to complete the application creation process.
+   d. Click **Create** to complete the application creation process
 
 </details>
 
@@ -142,17 +192,22 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
 ## Operation
 
 
-1. Connect the board to your PC using the provided USB cable through the KitProg3 USB connector.
+1. Connect the board to your PC using the provided USB cable through the KitProg3 USB connector
 
-2. Open a terminal program and select the debug COM port. Set the serial port parameters to 8N1 and 115200 baud.
+2. Open a terminal program and select the debug COM port. Set the serial port parameters to 8N1 and 115200 baud
+
+   > **Note** When building the application with the LCD enabled, the HCI UART should be used rather than the Peripheral UART as the Peripheral UART lines are used for the SPI interface. The terminal program should be
+disconnected from the UART when programming the application and when booting/resetting the application as the application will
+not boot properly with the terminal program connected to the HCI UART. The terminal program should be
+connected to the UART when the Infineon splash screen appears on the display.
 
 3. Program the board using one of the following:
 
    <b>Using Eclipse IDE for ModusToolbox&trade;</b>
 
-      1. Select the application project in the Project Explorer.
+      1. Select the application project in the Project Explorer
 
-      2. In the **Quick Panel**, scroll down, and click **\<Application Name> Program**.
+      2. In the **Quick Panel**, scroll down, and click **\<Application Name> Program**
 
    <b>Using CLI</b>
 
@@ -166,7 +221,7 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
       make program TARGET=APP_CYW955913EVK-01 TOOLCHAIN=GCC_ARM
       ```
 
-4. After programming, press the reset button on the board. Confirm that the expected output is displayed on the UART terminal.
+4. After programming, press the reset button on the board. Confirm that the expected output is displayed on the UART terminal
 
     ```
     CHIP:CYW955913: ====================================================
@@ -174,24 +229,43 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
     CHIP:CYW955913: ====================================================
     ```
 
+## Matter Controllers
+
+The door lock application is compatible with the standard Matter controllers such as Apple Home, Google Home,
+Amazon Alexa, and Samsung SmartThings. Each controller application will have their own method of commissioning
+a Matter device onto the Matter fabric for that controller. Please refer to the instructions for the controller
+you are using for how to commission a Matter device.
+
+>**Note:** You may get a warning from the controller application that the door lock application is not a certified
+Matter device. This is because the application is using a development Device Attestation Certificate (DAC). You may
+need to select an option allowing you to commission devices that are not certified with the controller you use. Please
+refer to the controller application instructions for how to do so.
 
 ## Setting up chip-tool
 
+Chip-tool is a command line interface reference Matter controller implementation used for developing, commissioning, and controlling
+Matter accessory devices. It is maintained by the Matter community and is available from the [Matter GitHub](https://github.com/project-chip/connectedhomeip) site.
+
 Once the application is running, set up chip-tool on Raspberry Pi 4 to perform commissioning and cluster control.
 
--   Set up python controller.
+-   Set up python controller
 
            $ cd {path-to-connectedhomeip}
            $ ./scripts/examples/gn_build_example.sh examples/chip-tool out/debug
 
--   Execute the controller.
+-   Execute the controller
 
            $ ./out/debug/chip-tool
 
 
 ## Commissioning over Bluetooth&reg; LE
 
-Run the built executable and pass it the discriminator and pairing code of the remote device, as well as the network credentials to use.
+- Run the built executable file and with the following parameters: 
+
+   - discriminator 
+   - Pairing code of the remote device
+   - Network credentials 
+
 
          $ ./out/debug/chip-tool pairing ble-wifi 1234 ${SSID} ${PASSWORD} 20202021 3840
 
@@ -205,9 +279,7 @@ Run the built executable and pass it the discriminator and pairing code of the r
 <a name="Notes"></a>
 
 
-## Notes
-
-Raspberry Pi 4 Bluetooth&reg; LE connection issues can be avoided by running the following commands. These power cycle the Bluetooth&reg; hardware and disable BR/EDR mode.
+> **Note:** Raspberry Pi 4 Bluetooth&reg; LE connection issues can be avoided by running the following commands. These power cycle the Bluetooth&reg; hardware and disable BR/EDR mode.
 
           $ sudo btmgmt -i hci0 power off
           $ sudo btmgmt -i hci0 bredr off
@@ -218,13 +290,13 @@ Raspberry Pi 4 Bluetooth&reg; LE connection issues can be avoided by running the
 
 ## Cluster control
 
--   After successful commissioning, use the Lock/Unlock cluster command to toggle device between Lock or Unlock states.
+-   After successful commissioning, use the Lock/Unlock cluster command to toggle device between Lock or Unlock states
 
     `$ ./out/debug/chip-tool doorlock lock-door 1234 1 --timedInteractionTimeoutMs 100`
 
     `$ ./out/debug/chip-tool doorlock unlock-door 1234 1 --timedInteractionTimeoutMs 100`
 
--   The Lock/Unlock status of the door lock can be observed with 'Red LED' on the board. This LED is configured with `LOCK_STATE_LED` in `include/AppConfig.h`.
+-   The Lock/Unlock status of the door lock can be observed with 'Red LED' on the board. This LED is configured with `LOCK_STATE_LED` in `include/AppConfig.h`
 
 <a name="Factory Reset"></a>
 
@@ -233,9 +305,9 @@ Raspberry Pi 4 Bluetooth&reg; LE connection issues can be avoided by running the
 
 > **Note:** Follow this step only if we need to commission the board to different access point SSID.
 
--	Rebooting the board after commissioning will not clear all Wi-Fi Credentials and Commissioning data. The only way to change Wi-Fi credentials is to factory reset and rerun commissioning process.
--	Press the "USER BTN" on the board for 2 seconds and release it to clear Commissioning data so that board can be commissioning to different Access point. 
--	Make sure to check the logs on Serial terminal to confirm if factory reset is triggered.
+-	Rebooting the board after commissioning will not clear all Wi-Fi Credentials and Commissioning data. The only way to change Wi-Fi credentials is to factory reset and rerun commissioning process
+-	Press the "USER BTN" on the board for 2 seconds and release it to clear Commissioning data so that board can be commissioning to different Access point
+-	Make sure to check the logs on Serial terminal to confirm if factory reset is triggered
 ```
 CHIP:CYW955913: Factory Reset Triggered. Press the button again within 5s to cancel.
 ```
@@ -314,6 +386,7 @@ Tools  | [ModusToolbox&trade;](https://www.infineon.com/design-resources/develop
 
 Infineon provides a wealth of data at [www.infineon.com](https://www.infineon.com) to help you select the right device, and quickly and effectively integrate it into your design.
 
+Lock/unlock images by pngtree.com
 
 ## Document history
 
@@ -322,6 +395,7 @@ Document title: *CE236478* - *Wi-Fi door lock*
 
 | Version | Description of change |
 | ------- | --------------------- |
+| 1.5.2   | Add LCD display support|
 | 1.4.2   | New code example for Wi-Fi door lock|
 
 <br>
@@ -333,8 +407,7 @@ The Bluetooth&reg; word mark and logos are registered trademarks owned by Blueto
 
 ---------------------------------------------------------
 
-© Cypress Semiconductor Corporation, 2025. This document is the property of Cypress Semiconductor Corporation, an Infineon Technologies company, and its affiliates ("Cypress").  This document, including any software or firmware included or referenced in this document ("Software"), is owned by Cypress under the intellectual property laws and treaties of the United States and other countries worldwide.  Cypress reserves all rights under such laws and treaties and does not, except as specifically stated in this paragraph, grant any license under its patents, copyrights, trademarks, or other intellectual property rights.  If the Software is not accompanied by a license agreement and you do not otherwise have a written agreement with Cypress governing the use of the Software, then Cypress hereby grants you a personal, non-exclusive, nontransferable license (without the right to sublicense) (1) under its copyright rights in the Software (a) for Software provided in source code form, to modify and reproduce the Software solely for use with Cypress hardware products, only internally within your organization, and (b) to distribute the Software in binary code form externally to end users (either directly or indirectly through resellers and distributors), solely for use on Cypress hardware product units, and (2) under those claims of Cypress's patents that are infringed by the Software (as provided by Cypress, unmodified) to make, use, distribute, and import the Software solely for use with Cypress hardware products.  Any other use, reproduction, modification, translation, or compilation of the Software is prohibited.
+(c) 2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG. All rights reserved.
+This software, associated documentation and materials ("Software") is owned by Infineon Technologies AG or one of its affiliates ("Infineon") and is protected by and subject to worldwide patent protection, worldwide copyright laws, and international treaty provisions. Therefore, you may use this Software only as provided in the license agreement accompanying the software package from which you obtained this Software. If no license agreement applies, then any use, reproduction, modification, translation, or compilation of this Software is prohibited without the express written permission of Infineon.
 <br>
-TO THE EXTENT PERMITTED BY APPLICABLE LAW, CYPRESS MAKES NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, WITH REGARD TO THIS DOCUMENT OR ANY SOFTWARE OR ACCOMPANYING HARDWARE, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  No computing device can be absolutely secure.  Therefore, despite security measures implemented in Cypress hardware or software products, Cypress shall have no liability arising out of any security breach, such as unauthorized access to or use of a Cypress product. CYPRESS DOES NOT REPRESENT, WARRANT, OR GUARANTEE THAT CYPRESS PRODUCTS, OR SYSTEMS CREATED USING CYPRESS PRODUCTS, WILL BE FREE FROM CORRUPTION, ATTACK, VIRUSES, INTERFERENCE, HACKING, DATA LOSS OR THEFT, OR OTHER SECURITY INTRUSION (collectively, "Security Breach").  Cypress disclaims any liability relating to any Security Breach, and you shall and hereby do release Cypress from any claim, damage, or other liability arising from any Security Breach.  In addition, the products described in these materials may contain design defects or errors known as errata which may cause the product to deviate from published specifications. To the extent permitted by applicable law, Cypress reserves the right to make changes to this document without further notice. Cypress does not assume any liability arising out of the application or use of any product or circuit described in this document. Any information provided in this document, including any sample design information or programming code, is provided only for reference purposes.  It is the responsibility of the user of this document to properly design, program, and test the functionality and safety of any application made of this information and any resulting product.  "High-Risk Device" means any device or system whose failure could cause personal injury, death, or property damage.  Examples of High-Risk Devices are weapons, nuclear installations, surgical implants, and other medical devices.  "Critical Component" means any component of a High-Risk Device whose failure to perform can be reasonably expected to cause, directly or indirectly, the failure of the High-Risk Device, or to affect its safety or effectiveness.  Cypress is not liable, in whole or in part, and you shall and hereby do release Cypress from any claim, damage, or other liability arising from any use of a Cypress product as a Critical Component in a High-Risk Device. You shall indemnify and hold Cypress, including its affiliates, and its directors, officers, employees, agents, distributors, and assigns harmless from and against all claims, costs, damages, and expenses, arising out of any claim, including claims for product liability, personal injury or death, or property damage arising from any use of a Cypress product as a Critical Component in a High-Risk Device. Cypress products are not intended or authorized for use as a Critical Component in any High-Risk Device except to the limited extent that (i) Cypress's published data sheet for the product explicitly states Cypress has qualified the product for use in a specific High-Risk Device, or (ii) Cypress has given you advance written authorization to use the product as a Critical Component in the specific High-Risk Device and you have signed a separate indemnification agreement.
-<br>
-Cypress, the Cypress logo, and combinations thereof, ModusToolbox&trade;, PSOC, CAPSENSE, EZ-USB, F-RAM, and TRAVEO are trademarks or registered trademarks of Cypress or a subsidiary of Cypress in the United States or in other countries. For a more complete list of Cypress trademarks, visit [www.infineon.com](https://www.infineon.com).  Other names and brands may be claimed as property of their respective owners.
+Disclaimer: UNLESS OTHERWISE EXPRESSLY AGREED WITH INFINEON, THIS SOFTWARE IS PROVIDED AS-IS, WITH NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, ALL WARRANTIES OF NON-INFRINGEMENT OF THIRD-PARTY RIGHTS AND IMPLIED WARRANTIES SUCH AS WARRANTIES OF FITNESS FOR A SPECIFIC USE/PURPOSE OR MERCHANTABILITY. Infineon reserves the right to make changes to the Software without notice. You are responsible for properly designing, programming, and testing the functionality and safety of your intended application of the Software, as well as complying with any legal requirements related to its use. Infineon does not guarantee that the Software will be free from intrusion, data theft or loss, or other breaches (“Security Breaches”), and Infineon shall have no liability arising out of any Security Breaches. Unless otherwise explicitly approved by Infineon, the Software may not be used in any application where a failure of the Product or any consequences of the use thereof can reasonably be expected to result in personal injury.

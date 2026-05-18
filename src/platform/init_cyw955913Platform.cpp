@@ -33,5 +33,10 @@ void init_cyw955913Platform(void)
     cybsp_init();
 
     /* Initialize retarget-io to use the debug UART port */
+#if ENABLE_UI
+    /* Use BT UART to free up SPI pins */
+    cy_retarget_io_init(BT_UART_TXD, BT_UART_RXD, CY_RETARGET_IO_BAUDRATE);
+#else
     cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
+#endif
 }

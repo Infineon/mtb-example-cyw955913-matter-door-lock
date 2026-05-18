@@ -51,6 +51,10 @@
 #include <DeviceAttestationCredsExampleTrustM.h>
 #endif
 
+#if ENABLE_UI
+#include "lvgl_support.h"
+#endif
+
 /* OTA related includes */
 #if CHIP_DEVICE_CONFIG_ENABLE_OTA_REQUESTOR
 #include <app/clusters/ota-requestor/BDXDownloader.h>
@@ -93,7 +97,9 @@ cy_timer_t sFunctionTimer; // app sw timer.
 cy_thread_t sAppTaskHandle;
 cy_queue_t sAppEventQueue;
 
+#if !ENABLE_UI
 LEDWidget sLockLED;
+#endif
 
 bool sIsWiFiStationProvisioned = false;
 bool sIsWiFiStationEnabled     = false;
@@ -166,6 +172,39 @@ CHIP_ERROR AppTask::StartAppTask()
                                    APP_TASK_PRIORITY, (cy_thread_arg_t)NULL);
     return (result != CY_RSLT_SUCCESS) ? APP_ERROR_CREATE_TASK_FAILED : CHIP_NO_ERROR;
 }
+
+void DeviceEventCallback(const ChipDeviceEvent * event, intptr_t arg)
+{
+    switch (event->Type)
+    {
+        case DeviceEventType::kInternetConnectivityChange:
+            // Restart the server whenever an ip address is renewed
+            if (event->InternetConnectivityChange.IPv4 == kConnectivity_Established ||
+                event->InternetConnectivityChange.IPv6 == kConnectivity_Established)
+            {
+                chip::app::DnssdServer::Instance().StartServer();
+            }
+            break;
+
+        case DeviceEventType::kCommissioningComplete:
+#if ENABLE_UI
+            chip::app::DataModel::Nullable<chip::app::Clusters::DoorLock::DlLockState> state;
+            chip::EndpointId endpointId{ 1 };
+            chip::app::Clusters::DoorLock::Attributes::LockState::Get(endpointId, state);
+
+            if (state.Value() == DlLockState::kUnlocked)
+            {
+                draw_lock_screen(false);
+            }
+            else
+            {
+                draw_lock_screen(true);
+            }
+#endif
+            break;
+    }
+}
+
 static void InitServer(intptr_t context)
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
@@ -288,6 +327,7 @@ void AppTask::lockMgr_Init()
 
     LockMgr().SetCallbacks(ActionInitiated, ActionCompleted);
 
+#if !ENABLE_UI
     // Initialize LEDs
     sLockLED.Init(LOCK_STATE_LED);
 
@@ -299,12 +339,43 @@ void AppTask::lockMgr_Init()
     {
         sLockLED.Set(true);
     }
+#endif
 
     ConfigurationMgr().LogDeviceConfig();
     // Users and credentials should be checked once from flash on boot
     LockMgr().ReadConfigValues();
     // Print setup info
     PrintOnboardingCodes(chip::RendezvousInformationFlag(chip::RendezvousInformationFlag::kBLE));
+
+#if ENABLE_UI
+    if (ConnectivityMgr().IsWiFiStationProvisioned())
+    {
+        if (state.Value() == DlLockState::kUnlocked)
+        {
+            draw_lock_screen(false);
+        }
+        else
+        {
+            draw_lock_screen(true);
+        }
+    }
+    else
+    {
+        // Create buffer for QR code that can fit max size and null terminator.
+        char qrCodeBuffer[chip::QRCodeBasicSetupPayloadGenerator::kMaxQRCodeBase38RepresentationLength + 1];
+        chip::MutableCharSpan QRCode(qrCodeBuffer);
+
+        err = GetQRCode(QRCode, chip::RendezvousInformationFlag(chip::RendezvousInformationFlag::kBLE));
+        if (err == CHIP_NO_ERROR)
+        {
+            display_qrcode(qrCodeBuffer);
+        }
+        else
+        {
+            INF_LOG("Error generating QRCode");
+        }
+    }
+#endif
 }
 
 void AppTask::Init()
@@ -317,20 +388,9 @@ void AppTask::Init()
         appError(CHIP_ERROR_WELL_UNINITIALIZED);
     }
 #endif
-    // Register the callback to init the MDNS server when connectivity is available
-    PlatformMgr().AddEventHandler(
-        [](const ChipDeviceEvent * event, intptr_t arg) {
-            // Restart the server whenever an ip address is renewed
-            if (event->Type == DeviceEventType::kInternetConnectivityChange)
-            {
-                if (event->InternetConnectivityChange.IPv4 == kConnectivity_Established ||
-                    event->InternetConnectivityChange.IPv6 == kConnectivity_Established)
-                {
-                    chip::app::DnssdServer::Instance().StartServer();
-                }
-            }
-        },
-        0);
+
+    // Register our device event callback handler
+    PlatformMgr().AddEventHandler(DeviceEventCallback, reinterpret_cast<intptr_t>(nullptr));
 
     chip::DeviceLayer::PlatformMgr().ScheduleWork(InitServer, reinterpret_cast<intptr_t>(nullptr));
 }
@@ -362,7 +422,9 @@ void AppTask::AppTaskMain(cy_thread_arg_t arg)
             sHaveBLEConnections       = (ConnectivityMgr().NumBLEConnections() != 0);
             PlatformMgr().UnlockChipStack();
         }
+#if !ENABLE_UI
         sLockLED.Animate();
+#endif
     }
 }
 
@@ -479,16 +541,19 @@ void AppTask::FunctionHandler(AppEvent * event)
 
             sAppTask.mFunction = Function::kFactoryReset;
 
+#if !ENABLE_UI
             // Turn off all LEDs before starting blink to make sure blink is
             // co-ordinated.
             sLockLED.Set(false);
             sLockLED.Blink(500);
+#endif
         }
         else if (sAppTask.mFunctionTimerActive && sAppTask.mFunction == Function::kFactoryReset)
         {
+#if !ENABLE_UI
             // Set lock status LED back to show state of lock.
             sLockLED.Set(!LockMgr().NextState());
-
+#endif
             sAppTask.CancelTimer();
 
             // Change the function to none selected since factory reset has been
@@ -571,7 +636,11 @@ void AppTask::ActionInitiated(LockManager::Action_t aAction, int32_t aActor)
         sAppTask.mSyncClusterToButtonAction = true;
     }
 
+#if ENABLE_UI
+    start_lock_screen_animation();
+#else
     sLockLED.Blink(50, 50);
+#endif
 }
 
 void AppTask::ActionCompleted(LockManager::Action_t aAction)
@@ -583,13 +652,21 @@ void AppTask::ActionCompleted(LockManager::Action_t aAction)
     {
         INF_LOG("Lock Action has been completed");
 
+#if ENABLE_UI
+        draw_lock_screen(true);
+#else
         sLockLED.Set(true);
+#endif
     }
     else if (aAction == LockManager::UNLOCK_ACTION)
     {
         INF_LOG("Unlock Action has been completed");
 
+#if ENABLE_UI
+        draw_lock_screen(false);
+#else
         sLockLED.Set(false);
+#endif
     }
 
     if (sAppTask.mSyncClusterToButtonAction)
@@ -665,5 +742,31 @@ void AppTask::InitOTARequestor()
 
     INF_LOG("Current Software Version: %u", CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION);
     INF_LOG("Current Software Version String: %s", CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION_STRING);
+}
+#endif
+
+#if ENABLE_UI
+int start_lock_action(bool lock)
+{
+    LockManager::Action_t action;
+    int32_t actor;
+
+    if (lock)
+    {
+        action = LockManager::LOCK_ACTION;
+    }
+    else
+    {
+        action = LockManager::UNLOCK_ACTION;
+    }
+
+    actor = AppEvent::kEventType_Button;
+    if (!LockMgr().InitiateAction(actor, action))
+    {
+        INF_LOG("Action is already in progress or active.");
+        return -1;
+    }
+
+    return 0;
 }
 #endif

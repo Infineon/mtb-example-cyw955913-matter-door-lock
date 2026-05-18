@@ -43,6 +43,12 @@ openocd.tcl
 .vscode/
 *.code-workspace
 
+.cache
+.clang*
+.ninja_l*
+deps/assetlocks.json
+imports
+
 # IAR Embedded Workbench files
 
 # IAR Project file.

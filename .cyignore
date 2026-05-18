@@ -5,3 +5,10 @@ images
 .mtbLaunchConfigs
 .settings
 .vscode
+
+$(SEARCH_lvgl)/demos
+$(SEARCH_lvgl)/docs
+$(SEARCH_lvgl)/libs
+$(SEARCH_lvgl)/src/libs/thorvg
+$(SEARCH_lvgl)/tests
+$(SEARCH_lvgl)/zephyr
